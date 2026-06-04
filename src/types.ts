@@ -4,8 +4,12 @@ export interface ScaffoldConfig {
   openapi_spec?: string;
   scaffold_testids?: boolean;
   testid_convention?: string;
-  azure_openai_endpoint: string;
-  azure_openai_deployment: string;
+  provider?: 'azure' | 'deepseek';
+  // Azure OpenAI
+  azure_openai_endpoint?: string;
+  azure_openai_deployment?: string;
+  // DeepSeek
+  deepseek_model?: string;
   critical_workflows: string[];
 }
 

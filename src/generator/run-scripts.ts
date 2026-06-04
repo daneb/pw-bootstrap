@@ -2,6 +2,9 @@ export function generateRunScript(port: number): string {
   return `#!/bin/bash
 set -e
 
+# Always run from the repo root (parent of the e2e/ directory)
+cd "$(dirname "$0")/.."
+
 # Check Node.js version
 NODE_VERSION=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
 if [ -z "$NODE_VERSION" ] || [ "$NODE_VERSION" -lt 18 ]; then
@@ -28,10 +31,10 @@ npx playwright install chromium
 
 echo ""
 echo "Running smoke tests..."
-npx playwright test e2e/tests/smoke --reporter=list
+npx playwright test e2e/tests/smoke --config=e2e/playwright.config.ts --reporter=list
 
 echo ""
 echo "Running workflow tests..."
-npx playwright test e2e/tests/workflows --reporter=list
+npx playwright test e2e/tests/workflows --config=e2e/playwright.config.ts --reporter=list
 `;
 }

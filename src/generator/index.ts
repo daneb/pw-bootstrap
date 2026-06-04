@@ -1,5 +1,5 @@
 import { ScaffoldConfig, ScanResult, GeneratedFile, GenerationResult } from '../types';
-import { callAzureOpenAI } from '../ai/client';
+import { callAI } from '../ai/client';
 import {
   SYSTEM_SMOKE,
   SYSTEM_WORKFLOW,
@@ -84,7 +84,7 @@ export async function generate(
   if (noAi) {
     playwrightConfig = stubPlaywrightConfig(scan);
   } else {
-    playwrightConfig = await callAzureOpenAI(
+    playwrightConfig = await callAI(
       config,
       SYSTEM_PLAYWRIGHT_CONFIG,
       buildPlaywrightConfigPrompt(config.framework, scan.detectedPort),
@@ -101,7 +101,7 @@ export async function generate(
     smokeContent = stubSmokeTests(scan);
     smokeConfidence = 0.5;
   } else {
-    smokeContent = await callAzureOpenAI(
+    smokeContent = await callAI(
       config,
       SYSTEM_SMOKE,
       buildSmokePrompt(config.framework, scan.routes),
@@ -123,7 +123,7 @@ export async function generate(
       workflowConfidence = 0.5;
     } else {
       onProgress(`  → ${slug}...`);
-      workflowContent = await callAzureOpenAI(
+      workflowContent = await callAI(
         config,
         SYSTEM_WORKFLOW,
         buildWorkflowPrompt(config.framework, workflow, scan.routes, scan.components),

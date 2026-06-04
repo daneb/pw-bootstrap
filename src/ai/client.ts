@@ -1,17 +1,58 @@
 import { ScaffoldConfig } from '../types';
 
-const API_VERSION = '2024-02-01';
+const AZURE_API_VERSION = '2024-02-01';
+
+function stripFences(content: string): string {
+  // Remove opening fence: ```typescript, ```ts, ``` etc.
+  return content
+    .replace(/^```[a-zA-Z]*\n?/, '')
+    .replace(/\n?```$/, '')
+    .trim();
+}
+const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function callAzureOpenAI(
-  config: ScaffoldConfig,
-  systemPrompt: string,
-  userPrompt: string,
-  verbose = false
-): Promise<string> {
+function buildRequest(config: ScaffoldConfig, systemPrompt: string, userPrompt: string): { url: string; headers: Record<string, string>; body: string } {
+  const provider = config.provider ?? 'azure';
+
+  if (provider === 'deepseek') {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      console.error(`
+Error: DEEPSEEK_API_KEY environment variable is not set.
+
+macOS / Linux:
+  export DEEPSEEK_API_KEY="your-key-here"
+
+Windows (PowerShell):
+  $env:DEEPSEEK_API_KEY = "your-key-here"
+
+Then re-run the scaffold tool.`);
+      process.exit(1);
+    }
+
+    return {
+      url: `${DEEPSEEK_BASE_URL}/chat/completions`,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.deepseek_model ?? 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 4000,
+      }),
+    };
+  }
+
+  // Azure OpenAI
   const apiKey = process.env.AZURE_OPENAI_API_KEY;
   if (!apiKey) {
     console.error(`
@@ -27,47 +68,58 @@ Then re-run the scaffold tool.`);
     process.exit(1);
   }
 
-  const url = `${config.azure_openai_endpoint}openai/deployments/${config.azure_openai_deployment}/chat/completions?api-version=${API_VERSION}`;
+  return {
+    url: `${config.azure_openai_endpoint}openai/deployments/${config.azure_openai_deployment}/chat/completions?api-version=${AZURE_API_VERSION}`,
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': apiKey,
+    },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.2,
+      max_tokens: 4000,
+    }),
+  };
+}
+
+export async function callAI(
+  config: ScaffoldConfig,
+  systemPrompt: string,
+  userPrompt: string,
+  verbose = false
+): Promise<string> {
+  const { url, headers, body } = buildRequest(config, systemPrompt, userPrompt);
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': apiKey,
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.2,
-          max_tokens: 4000,
-        }),
-      });
+      const response = await fetch(url, { method: 'POST', headers, body });
 
       if (response.status === 429 || response.status >= 500) {
         const waitMs = Math.pow(2, attempt) * 1000;
-        console.log(`  Azure OpenAI rate limit hit. Retrying in ${waitMs / 1000}s... (attempt ${attempt}/3)`);
+        console.log(`  Rate limit or server error. Retrying in ${waitMs / 1000}s... (attempt ${attempt}/3)`);
         await sleep(waitMs);
         continue;
       }
 
       if (response.status === 401 || response.status === 403) {
-        console.error(`Error: Azure OpenAI authentication failed. Check your AZURE_OPENAI_API_KEY and endpoint.`);
+        const provider = config.provider ?? 'azure';
+        const keyName = provider === 'deepseek' ? 'DEEPSEEK_API_KEY' : 'AZURE_OPENAI_API_KEY';
+        console.error(`Error: Authentication failed. Check your ${keyName} and endpoint.`);
         process.exit(1);
       }
 
       if (!response.ok) {
-        throw new Error(`Azure OpenAI returned ${response.status}: ${await response.text()}`);
+        throw new Error(`API returned ${response.status}: ${await response.text()}`);
       }
 
       const json = await response.json() as { choices: { message: { content: string } }[] };
-      return json.choices[0].message.content.trim();
+      return stripFences(json.choices[0].message.content.trim());
     } catch (err) {
       if (attempt === 3) {
-        console.error(`Error: Azure OpenAI call failed after 3 attempts.`);
+        console.error(`Error: AI call failed after 3 attempts.`);
         if (verbose) console.error(err);
         process.exit(1);
       }
