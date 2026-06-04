@@ -31,10 +31,10 @@ npx playwright install chromium
 
 echo ""
 echo "Running smoke tests..."
-npx playwright test e2e/tests/smoke --config=e2e/playwright.config.ts --reporter=list
+npx playwright test --config=e2e/playwright.config.ts --grep @smoke --reporter=list
 
 echo ""
 echo "Running workflow tests..."
-npx playwright test e2e/tests/workflows --config=e2e/playwright.config.ts --reporter=list
+npx playwright test --config=e2e/playwright.config.ts --grep @workflow --reporter=list
 `;
 }

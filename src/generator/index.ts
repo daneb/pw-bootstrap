@@ -52,7 +52,7 @@ function stubPlaywrightConfig(scan: ScanResult): string {
   return `import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './e2e/tests',
+  testDir: './tests',
   fullyParallel: false,
   timeout: 30000,
   use: {

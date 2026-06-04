@@ -41,13 +41,27 @@ export function buildWorkflowPrompt(
 ): string {
   const routeList = routes.map((r) => r.path).join(', ');
   const componentList = components.map((c) => c.selector ?? c.name).join(', ');
+  const hasLogin = routes.some((r) => r.path === '/login');
+
+  const loginInstructions = hasLogin ? `
+Login behaviour:
+- The app redirects unauthenticated users to /login
+- Before any workflow step, navigate to /login and log in using:
+    await page.goto('/login');
+    await page.getByLabel('Username').fill('admin');
+    await page.getByLabel('Password').fill('password');
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page).not.toHaveURL('/login');
+- Do this at the start of the test, not in a beforeEach
+` : '';
+
   return `Generate a Playwright test for the following user workflow in a ${framework} SPA.
 
 Workflow description: "${workflow}"
 
 Available routes: ${routeList}
 Available component selectors/names: ${componentList || 'none detected'}
-
+${loginInstructions}
 Requirements:
 - Import { test, expect } from '@playwright/test'
 - Single test describing the full workflow
@@ -64,7 +78,7 @@ export function buildPlaywrightConfigPrompt(framework: string, port: number): st
 Requirements:
 - Use @playwright/test
 - baseURL: 'http://localhost:${port}'
-- testDir: './e2e/tests'
+- testDir: './tests'
 - Single browser: chromium only
 - Screenshot on failure
 - Video: retain-on-failure
