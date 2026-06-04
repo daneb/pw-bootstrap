@@ -1,0 +1,29 @@
+<div class="page">
+  <h1>Reports</h1>
+  <div class="toolbar">
+    <button type="button" (click)="export()">Export Report</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Report Name</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (report of reports; track report.id) {
+        <tr>
+          <td>{{ report.name }}</td>
+          <td>{{ report.date }}</td>
+          <td>{{ report.type }}</td>
+          <td><button type="button">Download</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (exported) {
+    <p class="success-message" role="status">Report exported successfully.</p>
+  }
+</div>

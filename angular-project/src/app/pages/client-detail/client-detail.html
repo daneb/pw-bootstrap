@@ -1,0 +1,15 @@
+<div class="page">
+  <h1>Client Detail</h1>
+  <p class="subtitle">ID: {{ clientId }}</p>
+  <div class="detail-card">
+    <div class="field"><span class="label">Name</span><span>{{ client.name }}</span></div>
+    <div class="field"><span class="label">Contact</span><span>{{ client.contact }}</span></div>
+    <div class="field"><span class="label">Phone</span><span>{{ client.phone }}</span></div>
+    <div class="field"><span class="label">Status</span><span>{{ client.status }}</span></div>
+    <div class="field"><span class="label">Client Since</span><span>{{ client.since }}</span></div>
+  </div>
+  <div class="actions">
+    <button type="button">Edit Client</button>
+    <button type="button" class="danger">Delete Client</button>
+  </div>
+</div>

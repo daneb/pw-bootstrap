@@ -1,0 +1,15 @@
+# .scaffold-config.yml
+# Place this file in the root of your Angular or React SPA repository
+# before running the scaffold tool.
+
+framework: angular                        # Required. angular | react
+ci_platform: azure-devops                 # Required. azure-devops | github-actions | jenkins | none
+openapi_spec: ./docs/api-spec.json        # Optional. Path to OpenAPI spec relative to repo root
+scaffold_testids: false                   # Optional. Default false.
+testid_convention: "{component}-{element}-{action}"  # Optional.
+azure_openai_endpoint: https://YOUR_ENDPOINT.openai.azure.com/
+azure_openai_deployment: gpt-4o
+critical_workflows:
+  - "User logs in and views the dashboard"
+  - "User searches for a client record"
+  - "User exports a report"

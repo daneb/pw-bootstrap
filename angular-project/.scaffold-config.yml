@@ -1,0 +1,8 @@
+framework: angular
+ci_platform: none
+azure_openai_endpoint: https://YOUR_ENDPOINT.openai.azure.com/
+azure_openai_deployment: gpt-4o
+critical_workflows:
+  - "User logs in and views the dashboard"
+  - "User searches for a client record"
+  - "User exports a report"

@@ -1,0 +1,7 @@
+{
+  "name": "angular-minimal",
+  "dependencies": {
+    "@angular/core": "^17.0.0",
+    "@angular/router": "^17.0.0"
+  }
+}

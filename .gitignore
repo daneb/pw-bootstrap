@@ -1,0 +1,16 @@
+# Scaffold tool
+node_modules/
+dist/
+
+# Generated e2e output — never commit to main
+angular-project/e2e/
+tests/fixtures/*/e2e/
+
+# Angular project
+angular-project/node_modules/
+angular-project/dist/
+angular-project/.angular/
+
+# Misc
+.DS_Store
+*.log

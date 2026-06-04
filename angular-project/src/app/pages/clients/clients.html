@@ -1,0 +1,33 @@
+<div class="page">
+  <h1>Clients</h1>
+  <div class="toolbar">
+    <input
+      type="search"
+      placeholder="Search clients..."
+      [(ngModel)]="search"
+      name="search"
+      aria-label="Search clients"
+    />
+    <button type="button">+ Add Client</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Contact</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (client of filtered; track client.id) {
+        <tr>
+          <td><a [routerLink]="['/clients', client.id]">{{ client.name }}</a></td>
+          <td>{{ client.contact }}</td>
+          <td>{{ client.status }}</td>
+          <td><button type="button">View</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
