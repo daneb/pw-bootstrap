@@ -1,0 +1,11 @@
+{
+  "mcp": {
+    "servers": {
+      "pw-scaffold": {
+        "type": "stdio",
+        "command": "node",
+        "args": ["/Users/danebalia/Repos/pw-scaffold/dist/mcp-server.js"]
+      }
+    }
+  }
+}

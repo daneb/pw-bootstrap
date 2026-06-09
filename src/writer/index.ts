@@ -26,9 +26,8 @@ export function writeFiles(repoRoot: string, files: GeneratedFile[], dryRun: boo
 export function checkE2eExists(repoRoot: string, force: boolean): void {
   const e2eDir = path.join(repoRoot, 'e2e');
   if (fs.existsSync(e2eDir) && !force) {
-    console.error(`Warning: e2e/ directory already exists in this repository.
-Use --force to overwrite, or delete e2e/ manually before running.
-Aborting.`);
-    process.exit(1);
+    throw new Error(
+      'e2e/ directory already exists. Use --force to overwrite, or delete e2e/ manually before running.'
+    );
   }
 }

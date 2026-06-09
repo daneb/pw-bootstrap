@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Playwright test scaffold bootstrap tool for Angular and React SPAs",
   "bin": {
-    "scaffold-bootstrap": "./dist/cli.js"
+    "scaffold-bootstrap": "./dist/cli.js",
+    "pw-scaffold-mcp": "./dist/mcp-server.js"
   },
   "main": "./dist/cli.js",
   "engines": {
@@ -15,6 +16,7 @@
     "start": "node dist/cli.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^12.1.0",
     "js-yaml": "^4.1.0",
     "ora": "^5.4.1"

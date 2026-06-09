@@ -3,7 +3,6 @@ import { ScaffoldConfig } from '../types';
 const AZURE_API_VERSION = '2024-02-01';
 
 function stripFences(content: string): string {
-  // Remove opening fence: ```typescript, ```ts, ``` etc.
   return content
     .replace(/^```[a-zA-Z]*\n?/, '')
     .replace(/\n?```$/, '')
@@ -21,17 +20,11 @@ function buildRequest(config: ScaffoldConfig, systemPrompt: string, userPrompt: 
   if (provider === 'deepseek') {
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) {
-      console.error(`
-Error: DEEPSEEK_API_KEY environment variable is not set.
-
-macOS / Linux:
-  export DEEPSEEK_API_KEY="your-key-here"
-
-Windows (PowerShell):
-  $env:DEEPSEEK_API_KEY = "your-key-here"
-
-Then re-run the scaffold tool.`);
-      process.exit(1);
+      throw new Error(
+        'DEEPSEEK_API_KEY environment variable is not set.\n\n' +
+        'macOS / Linux:  export DEEPSEEK_API_KEY="your-key-here"\n' +
+        'Windows (PowerShell):  $env:DEEPSEEK_API_KEY = "your-key-here"'
+      );
     }
 
     return {
@@ -55,17 +48,11 @@ Then re-run the scaffold tool.`);
   // Azure OpenAI
   const apiKey = process.env.AZURE_OPENAI_API_KEY;
   if (!apiKey) {
-    console.error(`
-Error: AZURE_OPENAI_API_KEY environment variable is not set.
-
-macOS / Linux:
-  export AZURE_OPENAI_API_KEY="your-key-here"
-
-Windows (PowerShell):
-  $env:AZURE_OPENAI_API_KEY = "your-key-here"
-
-Then re-run the scaffold tool.`);
-    process.exit(1);
+    throw new Error(
+      'AZURE_OPENAI_API_KEY environment variable is not set.\n\n' +
+      'macOS / Linux:  export AZURE_OPENAI_API_KEY="your-key-here"\n' +
+      'Windows (PowerShell):  $env:AZURE_OPENAI_API_KEY = "your-key-here"'
+    );
   }
 
   return {
@@ -107,8 +94,7 @@ export async function callAI(
       if (response.status === 401 || response.status === 403) {
         const provider = config.provider ?? 'azure';
         const keyName = provider === 'deepseek' ? 'DEEPSEEK_API_KEY' : 'AZURE_OPENAI_API_KEY';
-        console.error(`Error: Authentication failed. Check your ${keyName} and endpoint.`);
-        process.exit(1);
+        throw new Error(`Authentication failed. Check your ${keyName} and endpoint.`);
       }
 
       if (!response.ok) {
@@ -119,10 +105,9 @@ export async function callAI(
       return stripFences(json.choices[0].message.content.trim());
     } catch (err) {
       if (attempt === 3) {
-        console.error(`Error: AI call failed after 3 attempts.`);
-        if (verbose) console.error(err);
-        process.exit(1);
+        throw new Error(`AI call failed after 3 attempts: ${err instanceof Error ? err.message : String(err)}`);
       }
+      if (verbose) console.error(`Attempt ${attempt} failed:`, err);
       const waitMs = Math.pow(2, attempt) * 1000;
       await sleep(waitMs);
     }

@@ -3,9 +3,7 @@ import { Command } from 'commander';
 import * as path from 'path';
 import ora from 'ora';
 import { loadConfig } from './config';
-import { scan } from './scanner/index';
-import { generate } from './generator/index';
-import { writeFiles, checkE2eExists } from './writer/index';
+import { runScaffold } from './scaffold';
 import { CliOptions } from './types';
 
 const program = new Command();
@@ -29,50 +27,36 @@ CIB Scaffold Bootstrap
 `);
 
 async function main() {
-  // Load and validate config
   const config = loadConfig(repoRoot);
   console.log(`✓ Config loaded — framework: ${config.framework}, ci: ${config.ci_platform}`);
 
-  // Guard existing e2e/
-  checkE2eExists(repoRoot, opts.force);
-
-  // Scan repo
   const spinner = ora('Scanning repository...').start();
-  const scanResult = scan(repoRoot, config);
+
+  const { result, scanResult } = await runScaffold(repoRoot, config, {
+    skipAi: opts.skipAi ?? false,
+    verbose: opts.verbose,
+    force: opts.force,
+    dryRun: opts.dryRun,
+    onProgress: (msg) => {
+      spinner.stop();
+      console.log(`  → ${msg}`);
+    },
+  });
+
   spinner.succeed('Scanning repository... done');
-  console.log(`  → Routes found: ${scanResult.routes.length}`);
-  console.log(`  → HTTP endpoints found: ${scanResult.httpCalls.length}`);
-  console.log(`  → Components found: ${scanResult.components.length}`);
-  console.log(`  → Base URL: http://localhost:${scanResult.detectedPort}`);
-  if (opts.skipAi) {
-    console.log(`  → AI generation: disabled (--skip-ai)`);
-  }
 
   console.log('');
 
-  // Generate
-  const result = await generate(
-    config,
-    scanResult,
-    opts.skipAi ?? false,
-    opts.verbose,
-    (msg) => {
-      console.log(`✓ ${msg}`);
-    }
-  );
-
-  console.log('');
-
-  // Write
   if (opts.dryRun) {
-    writeFiles(repoRoot, result.files, true);
+    console.log('\nDry run — files that would be written:');
+    for (const file of result.files) {
+      console.log(`  ${file.path}`);
+    }
   } else {
     const writeSpinner = ora(`Writing files to e2e/...`).start();
-    writeFiles(repoRoot, result.files, false);
     writeSpinner.succeed(`Writing files to e2e/... done (${result.files.length} files)`);
   }
 
-  // Summary
   const avgWorkflow =
     result.summary.workflowConfidences.length > 0
       ? (result.summary.workflowConfidences.reduce((a, b) => a + b, 0) / result.summary.workflowConfidences.length).toFixed(2)
@@ -95,6 +79,8 @@ Next step: Start your app, then run:
   macOS/Linux:  bash e2e/run-tests.sh
 `);
   }
+
+  void scanResult; // used via onProgress callbacks above
 }
 
 main().catch((err) => {
