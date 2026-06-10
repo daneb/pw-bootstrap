@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Playwright test scaffold bootstrap tool for Angular and React SPAs",
   "bin": {
+    "pw-scaffold": "./dist/cli.js",
     "scaffold-bootstrap": "./dist/cli.js",
     "pw-scaffold-mcp": "./dist/mcp-server.js"
   },

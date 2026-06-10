@@ -9,8 +9,9 @@ import { CliOptions } from './types';
 const program = new Command();
 
 program
-  .name('scaffold-bootstrap')
+  .name('pw-scaffold')
   .description('Generate a complete Playwright test scaffold for Angular or React SPAs')
+  .version('1.0.0')
   .option('--repo <path>', 'Path to target SPA repository', '.')
   .option('--dry-run', 'Print planned output without writing files', false)
   .option('--skip-ai', 'Generate stub structure without AI calls', false)
