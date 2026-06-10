@@ -31,8 +31,13 @@ export function loadConfig(repoRoot: string): ScaffoldConfig {
     }
   } else if (provider === 'deepseek') {
     raw.deepseek_model = raw.deepseek_model ?? 'deepseek-chat';
+  } else if (provider === 'ollama') {
+    raw.ollama_model = (raw.ollama_model as string) ?? process.env.OLLAMA_MODEL;
+    if (!raw.ollama_model) {
+      throw new Error(`ollama_model is required in .scaffold-config.yml (or set OLLAMA_MODEL env var) when provider is 'ollama'`);
+    }
   } else {
-    throw new Error(`provider must be 'azure' or 'deepseek'. Got: '${provider}'`);
+    throw new Error(`provider must be 'azure', 'deepseek', or 'ollama'. Got: '${provider}'`);
   }
 
   raw.provider = provider;
@@ -63,12 +68,16 @@ export function buildConfigFromParams(params: {
   }
 
   // Auto-detect provider from environment if not in existing config
-  let provider: 'azure' | 'deepseek' = (existing.provider as 'azure' | 'deepseek') ?? 'deepseek';
+  let provider: 'azure' | 'deepseek' | 'ollama' = (existing.provider as 'azure' | 'deepseek' | 'ollama') ?? 'deepseek';
   if (!existing.provider) {
     if (process.env.DEEPSEEK_API_KEY) {
       provider = 'deepseek';
     } else if (process.env.AZURE_OPENAI_API_KEY) {
       provider = 'azure';
+    } else if (process.env.OLLAMA_MODEL) {
+      provider = 'ollama';
+    } else {
+      throw new Error('Set ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, or OLLAMA_MODEL to use pw-scaffold');
     }
   }
 
@@ -80,6 +89,7 @@ export function buildConfigFromParams(params: {
     openapi_spec: params.openapiSpec,
     provider,
     deepseek_model: existing.deepseek_model ?? 'deepseek-chat',
+    ollama_model: existing.ollama_model ?? process.env.OLLAMA_MODEL,
     azure_openai_endpoint: existing.azure_openai_endpoint ?? process.env.AZURE_OPENAI_ENDPOINT,
     azure_openai_deployment: existing.azure_openai_deployment ?? process.env.AZURE_OPENAI_DEPLOYMENT,
   } as ScaffoldConfig;

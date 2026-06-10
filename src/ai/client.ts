@@ -9,6 +9,7 @@ function stripFences(content: string): string {
     .trim();
 }
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
+const OLLAMA_BASE_URL = 'http://localhost:11434/v1';
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,6 +36,30 @@ function buildRequest(config: ScaffoldConfig, systemPrompt: string, userPrompt: 
       },
       body: JSON.stringify({
         model: config.deepseek_model ?? 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 4000,
+      }),
+    };
+  }
+
+  if (provider === 'ollama') {
+    const model = config.ollama_model ?? process.env.OLLAMA_MODEL;
+    if (!model) {
+      throw new Error('OLLAMA_MODEL environment variable is not set.');
+    }
+
+    return {
+      url: `${OLLAMA_BASE_URL}/chat/completions`,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ollama',
+      },
+      body: JSON.stringify({
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -92,8 +117,8 @@ export async function callAI(
       }
 
       if (response.status === 401 || response.status === 403) {
-        const provider = config.provider ?? 'azure';
-        const keyName = provider === 'deepseek' ? 'DEEPSEEK_API_KEY' : 'AZURE_OPENAI_API_KEY';
+        const p = config.provider ?? 'azure';
+        const keyName = p === 'deepseek' ? 'DEEPSEEK_API_KEY' : p === 'ollama' ? 'OLLAMA_MODEL (and confirm Ollama is running)' : 'AZURE_OPENAI_API_KEY';
         throw new Error(`Authentication failed. Check your ${keyName} and endpoint.`);
       }
 

@@ -4,12 +4,14 @@ export interface ScaffoldConfig {
   openapi_spec?: string;
   scaffold_testids?: boolean;
   testid_convention?: string;
-  provider?: 'azure' | 'deepseek';
+  provider?: 'azure' | 'deepseek' | 'ollama';
   // Azure OpenAI
   azure_openai_endpoint?: string;
   azure_openai_deployment?: string;
   // DeepSeek
   deepseek_model?: string;
+  // Ollama
+  ollama_model?: string;
   critical_workflows: string[];
 }
 

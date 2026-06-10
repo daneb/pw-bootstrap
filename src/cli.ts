@@ -10,7 +10,7 @@ const program = new Command();
 
 program
   .name('pw-scaffold')
-  .description('Generate a complete Playwright test scaffold for Angular or React SPAs')
+  .description('Generate a complete Playwright test scaffold for Angular or React SPAs.\nProviders: Azure OpenAI (AZURE_OPENAI_API_KEY), DeepSeek (DEEPSEEK_API_KEY), or Ollama (OLLAMA_MODEL=qwen2.5-coder:32b)')
   .version('1.0.0')
   .option('--repo <path>', 'Path to target SPA repository', '.')
   .option('--dry-run', 'Print planned output without writing files', false)
