@@ -55,6 +55,7 @@ async function main() {
   } else {
     const writeSpinner = ora(`Writing files to e2e/...`).start();
     writeSpinner.succeed(`Writing files to e2e/... done (${result.files.length} files)`);
+    console.log('✓ Generated .github/workflows/playwright.yml');
   }
 
   const avgWorkflow =

@@ -55,16 +55,87 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
   timeout: 30000,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL: 'http://localhost:${scan.detectedPort}',
+    trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  reporter: [['list'], ['junit', { outputFile: 'test-results/results.xml' }]],
+  reporter: [['html'], ['github']],
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
   ],
 });
+`;
+}
+
+function generateGithubWorkflow(suiteName: string): string {
+  return `name: ${suiteName}
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Playwright (\${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1/4, 2/4, 3/4, 4/4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright tests
+        run: npx playwright test --shard=\${{ matrix.shard }} --reporter=blob
+        env:
+          CI: true
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-\${{ strategy.job-index }}
+          path: blob-report/
+          retention-days: 1
+
+  merge-reports:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          merge-multiple: true
+          path: blob-reports/
+      - name: Merge into HTML report
+        run: npx playwright merge-reports --reporter=html,github ./blob-reports
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
 `;
 }
 
@@ -139,6 +210,10 @@ export async function generate(
       confidence: workflowConfidence,
     });
   }
+
+  // GitHub Actions workflow
+  const suiteName = config.critical_workflows[0] ?? 'playwright';
+  files.push({ path: '.github/workflows/playwright.yml', content: generateGithubWorkflow(suiteName) });
 
   // Run script (macOS only in Phase 1)
   files.push({ path: 'e2e/run-tests.sh', content: generateRunScript(scan.detectedPort) });

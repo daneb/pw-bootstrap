@@ -80,9 +80,12 @@ Requirements:
 - baseURL: 'http://localhost:${port}'
 - testDir: './tests'
 - Single browser: chromium only
-- Screenshot on failure
-- Video: retain-on-failure
-- Reporter: list for local, junit for CI
+- retries: process.env.CI ? 2 : 0
+- workers: process.env.CI ? 1 : undefined
+- use.trace: 'on-first-retry'
+- use.screenshot: 'only-on-failure'
+- use.video: 'retain-on-failure'
+- reporter: [['html'], ['github']]
 - Set timeout: 30000
 - Do not use webServer config — app is started manually
 - Use fullyParallel: false for stability on first run`;
